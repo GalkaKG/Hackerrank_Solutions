@@ -1,0 +1,6 @@
+/* MySQL syntax*/
+
+SELECT
+    CITY
+FROM STATION
+WHERE CITY REGEXP '^[AEIOU]';

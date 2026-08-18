@@ -1,0 +1,44 @@
+WITH daily AS (
+    SELECT
+        submission_date,
+        hacker_id,
+        COUNT(*) AS cnt
+    FROM Submissions
+    GROUP BY submission_date, hacker_id
+),
+
+best AS (
+    SELECT
+        submission_date,
+        hacker_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY submission_date
+            ORDER BY cnt DESC, hacker_id
+        ) AS rn
+    FROM daily
+)
+
+SELECT
+    b.submission_date,
+
+    (
+        SELECT COUNT(*)
+        FROM (
+            SELECT hacker_id
+            FROM Submissions s2
+            WHERE s2.submission_date <= b.submission_date
+            GROUP BY hacker_id
+            HAVING COUNT(DISTINCT submission_date)
+                   = DATEDIFF(b.submission_date, '2016-03-01') + 1
+        ) x
+    ) AS total_hackers,
+
+    b.hacker_id,
+    h.name
+
+FROM best b
+JOIN Hackers h
+    ON h.hacker_id = b.hacker_id
+WHERE b.rn = 1
+  AND b.submission_date BETWEEN '2016-03-01' AND '2016-03-15'
+ORDER BY b.submission_date;
